@@ -1,0 +1,130 @@
+<!-- filename: index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Product Name Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .container {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 2rem;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      background: #764ba2;
+      transform: translateY(-2px);
+    }
+    #productName {
+      margin-top: 2rem;
+      font-size: 1.5rem;
+      color: #333;
+      min-height: 2rem;
+    }
+    .loading {
+      display: none;
+      margin-top: 1rem;
+    }
+    .error {
+      color: #e74c3c;
+      margin-top: 1rem;
+    }
+    .api-key-input {
+      margin: 1rem 0;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 80%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Product Name Generator</h1>
+    <input type="text" id="apiKey" class="api-key-input" placeholder="Enter your API key">
+    <button onclick="generateName()">Generate Product Name</button>
+    <div class="loading" id="loading">Generating...</div>
+    <div id="productName"></div>
+    <div class="error" id="error"></div>
+  </div>
+
+  <script>
+    function generateName() {
+      const productNameElement = document.getElementById('productName');
+      const loadingElement = document.getElementById('loading');
+      const errorElement = document.getElementById('error');
+      const apiKey = document.getElementById('apiKey').value;
+      
+      // Clear previous results
+      productNameElement.textContent = '';
+      errorElement.textContent = '';
+      
+      // Validate API key
+      if (!apiKey) {
+        errorElement.textContent = "Please enter your API key";
+        return;
+      }
+      
+      // Show loading
+      loadingElement.style.display = 'block';
+      
+      fetch('http://127.0.0.1:5000/api/generate', {
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        }
+      })
+        .then(response => {
+          if (!response.ok) {
+            if (response.status === 401) {
+              throw new Error('Invalid API key');
+            }
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.status === 'success') {
+            productNameElement.textContent = data.product_names;
+            productNameElement.style.color = '#333';
+          } else {
+            throw new Error(data.message || 'Unknown error occurred');
+          }
+        })
+        .catch(error => {
+          errorElement.textContent = `Error: ${error.message}`;
+          console.error('Error:', error);
+        })
+        .finally(() => {
+          loadingElement.style.display = 'none';
+        });
+    }
+  </script>
+</body>
+</html>
